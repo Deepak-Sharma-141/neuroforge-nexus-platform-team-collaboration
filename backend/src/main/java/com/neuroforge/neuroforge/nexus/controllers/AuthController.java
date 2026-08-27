@@ -1,5 +1,7 @@
 package com.neuroforge.neuroforge.nexus.controllers;
 
+import com.neuroforge.neuroforge.nexus.dto.request.LoginRequest;
+import com.neuroforge.neuroforge.nexus.dto.response.LoginResponse;
 import com.neuroforge.neuroforge.nexus.dto.response.SignupResponse;
 import com.neuroforge.neuroforge.nexus.service.AuthService;
 import com.neuroforge.neuroforge.nexus.service.UserService;
@@ -24,7 +26,14 @@ public class AuthController {
     AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest signupRequest){
+    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest signupRequest) {
         return ResponseEntity.status(HttpStatus.OK).body(authService.signup(signupRequest));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(
+                authService.login(request)
+        );
     }
 }

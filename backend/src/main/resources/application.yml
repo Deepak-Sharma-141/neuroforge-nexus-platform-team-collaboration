@@ -4,7 +4,11 @@ spring:
 
   data:
     mongodb:
+      uuid-representation: standard
       uri: mongodb://localhost:27017
-      database: ${MONGO_DATABASE}  /*
-      username: ${MONGO_USERNAME}     keep it in you env variable
-      password: ${MONGO_PASSWORD}  */
+      database: ${MONGO_DATABASE}
+      username: ${MONGO_USERNAME}     #keep it in you env variable
+      password: ${MONGO_PASSWORD}
+
+jwt:
+  secret-key: sjihrjhsguusgkgju549ahfj;jawjiquaHJJJGUjJiohugvLJNDV;KJPUgSJGIHSUH
