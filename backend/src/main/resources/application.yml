@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: neuroforge-nexus
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+      database: ${MONGO_DATABASE}  /*
+      username: ${MONGO_USERNAME}     keep it in you env variable
+      password: ${MONGO_PASSWORD}  */
