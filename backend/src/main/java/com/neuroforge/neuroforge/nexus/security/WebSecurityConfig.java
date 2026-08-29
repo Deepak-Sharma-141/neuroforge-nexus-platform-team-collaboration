@@ -19,7 +19,7 @@ public class WebSecurityConfig {
 
     private final JwtAuthenticationFilter authenticationFilter;
 
-    private static final String[] JWT_ROUTES = {"/auth/**", "/users/**", "/actuator/**"};
+    private static final String[] JWT_ROUTES = {"/auth/**", "/users/**", "/projects/**", "/actuator/**"};
 
     @Bean
     public SecurityFilterChain jwtChain(HttpSecurity httpSecurity) {

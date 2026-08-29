@@ -26,8 +26,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public SignupResponse getUserById(String id) {
-        User user = userRepository.findById(id).orElseThrow(() ->
-                new RuntimeException("User with id: "+id+ " not found"));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User with id: " + id + " not found"));
         return userMapper.toResponse(user);
     }
 
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<SignupResponse> getUserByRole(String role) {
-        List<User> users = userRepository.findAllByRole(role);  // repository returns a list
+        List<User> users = userRepository.findAllByRole(role); // repository returns a list
         if (users.isEmpty()) {
             throw new RuntimeException("No users found with role: " + role);
         }
