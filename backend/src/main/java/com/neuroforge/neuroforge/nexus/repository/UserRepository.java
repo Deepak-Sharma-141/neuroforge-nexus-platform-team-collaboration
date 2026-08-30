@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface UserRepository extends MongoRepository<User, String> {
@@ -15,4 +16,6 @@ public interface UserRepository extends MongoRepository<User, String> {
     List<User> findAllByRole(String role);
 
     Optional<User> findByEmail(String email);
+
+    Optional<User> findUserByUserId(UUID userId);
 }

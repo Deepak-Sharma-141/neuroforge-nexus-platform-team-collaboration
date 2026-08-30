@@ -34,6 +34,17 @@ public class JwtUtil {
                 .compact();
     }
 
+    public String generateRefreshToken(UUID userId) {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .subject(userId.toString())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusSeconds(60 * 60 * 24 * 30 * 6)))
+                .claim("user_id", userId.toString())
+                .signWith(getSecretKey())
+                .compact();
+    }
+
     public Claims verifyAccessToken(String accessToken) {
         return Jwts.parser()
                 .verifyWith(getSecretKey())
@@ -42,11 +53,30 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    public String extractRole(Claims claims) {
-        return claims.get("role", String.class);
+    public Claims verifyRefreshToken(String refreshToken) {
+        return Jwts.parser()
+                .verifyWith(getSecretKey())
+                .build()
+                .parseSignedClaims(refreshToken)
+                .getPayload();
     }
 
-    public UUID extractUserId(Claims claims) {
-        return UUID.fromString(claims.get("user_id", String.class));
+
+    public UUID getUserIdFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        // For access tokens, user_id is stored as a claim
+        if (claims.get("user_id") != null) {
+            return UUID.fromString(claims.get("user_id", String.class));
+        }
+
+        // For refresh tokens, userId is stored in the subject
+        return UUID.fromString(claims.getSubject());
     }
+
+
 }

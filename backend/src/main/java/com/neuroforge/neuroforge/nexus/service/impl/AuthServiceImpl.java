@@ -6,15 +6,18 @@ import com.neuroforge.neuroforge.nexus.dto.response.LoginResponse;
 import com.neuroforge.neuroforge.nexus.dto.response.SignupResponse;
 import com.neuroforge.neuroforge.nexus.entities.enums.Role;
 import com.neuroforge.neuroforge.nexus.entities.User;
+import com.neuroforge.neuroforge.nexus.exception.ResourceNotFoundException;
 import com.neuroforge.neuroforge.nexus.repository.UserRepository;
 import com.neuroforge.neuroforge.nexus.security.JwtUtil;
 import com.neuroforge.neuroforge.nexus.service.AuthService;
+import com.neuroforge.neuroforge.nexus.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.neuroforge.neuroforge.nexus.mapper.UserMapper;
@@ -32,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
     AuthenticationManager authenticationManager;
     JwtUtil jwtUtil;
     PasswordEncoder passwordEncoder;
+    UserService userService;
 
     @Override
     public SignupResponse signup(SignupRequest signupRequest) {
@@ -60,13 +64,16 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RuntimeException("User not found with email: "+request.email()));
 
-        String token = jwtUtil.generateAccessToken(
+        UUID userId = user.getUserId();
+        String accessToken = jwtUtil.generateAccessToken(
                 request.email(),
                 user.getUserId(),
                 user.getRole().name()
         );
 
-        return new LoginResponse(token);
+        String refreshToken = jwtUtil.generateRefreshToken(userId);
+
+        return new LoginResponse(userId, accessToken, refreshToken);
 
     }
 
@@ -85,5 +92,20 @@ public class AuthServiceImpl implements AuthService {
         log.info("User created with role {} for email: {}", role, signupRequest.email());
 
         return userMapper.toResponse(savedUser);
+    }
+
+    @Override
+    public LoginResponse refresh(String refreshToken) {
+        jwtUtil.verifyRefreshToken(refreshToken);
+
+        UUID userId = jwtUtil.getUserIdFromToken(refreshToken);
+        User user = userRepository.findUserByUserId(userId).orElseThrow(() ->
+                new ResourceNotFoundException("user not found"));
+
+        String newAccessToken = jwtUtil.generateAccessToken(user.getEmail(), userId, user.getRole().toString());
+        String newRefreshToken = jwtUtil.generateRefreshToken(userId);
+
+        log.info("Refresh successful for user {}", user.getEmail());
+        return new LoginResponse(userId, newAccessToken, newRefreshToken);
     }
 }

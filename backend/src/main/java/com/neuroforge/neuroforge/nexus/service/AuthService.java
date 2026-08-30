@@ -13,4 +13,6 @@ public interface AuthService {
     LoginResponse login(LoginRequest request);
 
     SignupResponse createUserWithRole(SignupRequest request, Role role);
+
+    LoginResponse refresh(String refreshToken);
 }

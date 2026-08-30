@@ -5,6 +5,9 @@ import com.neuroforge.neuroforge.nexus.dto.response.LoginResponse;
 import com.neuroforge.neuroforge.nexus.dto.response.SignupResponse;
 import com.neuroforge.neuroforge.nexus.service.AuthService;
 import com.neuroforge.neuroforge.nexus.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.neuroforge.neuroforge.nexus.dto.request.SignupRequest;
+
+import java.util.Objects;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
@@ -31,9 +37,37 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
-        return ResponseEntity.status(HttpStatus.OK).body(
-                authService.login(request)
-        );
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request, HttpServletResponse response) {
+
+        LoginResponse loginResponse = authService.login(request);
+
+        Cookie cookie = new Cookie("refreshToken", loginResponse.refreshToken());
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok(loginResponse);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String refreshToken = null;
+        for (Cookie cookie : cookies) {
+            if ("refreshToken".equals(cookie.getName())) {
+                refreshToken = cookie.getValue();
+                break;
+            }
+        }
+
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        LoginResponse loginResponse = authService.refresh(refreshToken);
+        return ResponseEntity.ok(loginResponse);
     }
 }
