@@ -2,6 +2,7 @@ package com.neuroforge.neuroforge.nexus.service.impl;
 
 import com.neuroforge.neuroforge.nexus.dto.response.SignupResponse;
 import com.neuroforge.neuroforge.nexus.entities.User;
+import com.neuroforge.neuroforge.nexus.entities.enums.Role;
 import com.neuroforge.neuroforge.nexus.mapper.UserMapper;
 import com.neuroforge.neuroforge.nexus.repository.UserRepository;
 import com.neuroforge.neuroforge.nexus.service.UserService;
@@ -43,5 +44,12 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("No users found with role: " + role);
         }
         return userMapper.toAllResponse(users);
+    }
+
+    public SignupResponse updateRole(String id, Role newRole) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        user.setRole(newRole);
+        return userMapper.toResponse(userRepository.save(user));
     }
 }

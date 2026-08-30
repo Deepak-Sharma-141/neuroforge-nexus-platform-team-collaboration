@@ -69,4 +69,21 @@ public class AuthServiceImpl implements AuthService {
         return new LoginResponse(token);
 
     }
+
+    @Override
+    public SignupResponse createUserWithRole(SignupRequest signupRequest, Role role) {
+        if (userRepository.existsByEmail(signupRequest.email())) {
+            log.error("User already exists with email {}", signupRequest.email());
+            throw new RuntimeException("Email already registered");
+        }
+        User user = userMapper.toEntity(signupRequest);
+        user.setUserId(UUID.randomUUID());
+        user.setPassword(passwordEncoder.encode(signupRequest.password()));
+        user.setRole(role);   // caller-supplied, not client-supplied
+
+        User savedUser = userRepository.save(user);
+        log.info("User created with role {} for email: {}", role, signupRequest.email());
+
+        return userMapper.toResponse(savedUser);
+    }
 }

@@ -1,5 +1,6 @@
 package com.neuroforge.neuroforge.nexus.entities;
 
+import com.neuroforge.neuroforge.nexus.config.RolePermission;
 import com.neuroforge.neuroforge.nexus.entities.enums.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -10,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -40,9 +42,14 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(
-                new SimpleGrantedAuthority("ROLE_"+ role.name())
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
+
+        RolePermission.forRole(role).forEach(p ->
+                authorities.add(new SimpleGrantedAuthority(p.name()))
         );
+
+        return authorities;
     }
 
     @Override
