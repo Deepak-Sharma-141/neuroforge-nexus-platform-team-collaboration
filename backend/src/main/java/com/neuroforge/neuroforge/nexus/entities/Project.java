@@ -34,6 +34,8 @@ public class Project {
 
     String description;
 
+    String teamLead;
+
     @Builder.Default
     ProjectStatus status = ProjectStatus.PLANNED;
 

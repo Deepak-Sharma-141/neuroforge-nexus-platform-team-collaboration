@@ -43,6 +43,10 @@ public class ProjectServiceImpl implements ProjectService {
             throw new ResourceNotFoundException("Owner user not found with id: " + request.getOwnerId());
         }
 
+        if (request.getTeamLead() != null && !userRepository.existsById(request.getTeamLead())) {
+            throw new ResourceNotFoundException("Team lead user not found with id: " + request.getTeamLead());
+        }
+
         if (request.getMemberIds() != null) {
             for (String memberId : request.getMemberIds()) {
                 if (!userRepository.existsById(memberId)) {
@@ -109,6 +113,13 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public List<ProjectResponse> getProjectsByTeamLead(String teamLead) {
+        log.info("Fetching projects led by team lead ID: {}", teamLead);
+        List<Project> projects = projectRepository.findByTeamLead(teamLead);
+        return projectMapper.toResponseList(projects);
+    }
+
+    @Override
     public ProjectResponse updateProject(String id, UpdateProjectRequest request) {
         log.info("Updating project with ID: {}", id);
         Project project = projectRepository.findById(id)
@@ -121,6 +132,10 @@ public class ProjectServiceImpl implements ProjectService {
 
         if (request.getOwnerId() != null && !userRepository.existsById(request.getOwnerId())) {
             throw new ResourceNotFoundException("Owner user not found with id: " + request.getOwnerId());
+        }
+
+        if (request.getTeamLead() != null && !userRepository.existsById(request.getTeamLead())) {
+            throw new ResourceNotFoundException("Team lead user not found with id: " + request.getTeamLead());
         }
 
         if (request.getMemberIds() != null) {

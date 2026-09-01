@@ -24,6 +24,8 @@ public class CreateProjectRequest {
 
     ProjectStatus status;
 
+    String teamLead;
+
     ProjectPriority priority;
 
     @NotBlank(message = "Owner ID is required")

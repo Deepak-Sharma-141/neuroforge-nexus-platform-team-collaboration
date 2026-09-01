@@ -21,4 +21,6 @@ public interface ProjectRepository extends MongoRepository<Project, String> {
     List<Project> findByStatus(ProjectStatus status);
 
     List<Project> findByMemberIdsContaining(String memberId);
+
+    List<Project> findByTeamLead(String teamLead);
 }

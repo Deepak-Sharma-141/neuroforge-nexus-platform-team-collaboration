@@ -36,8 +36,6 @@ public class User implements UserDetails {
 
     Role role;
 
-    String team;
-
     String password;
 
     @Override

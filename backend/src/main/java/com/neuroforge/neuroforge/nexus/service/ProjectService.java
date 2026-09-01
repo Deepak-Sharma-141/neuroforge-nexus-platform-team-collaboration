@@ -28,4 +28,6 @@ public interface ProjectService {
     ProjectResponse addMemberToProject(String projectId, String memberId);
 
     ProjectResponse removeMemberFromProject(String projectId, String memberId);
+
+    List<ProjectResponse> getProjectsByTeamLead(String teamLead);
 }

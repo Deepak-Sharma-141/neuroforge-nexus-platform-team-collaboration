@@ -49,6 +49,12 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.getProjectsByOwner(ownerId));
     }
 
+    @GetMapping("/team-lead/{teamLead}")
+    @PreAuthorize("hasAuthority('PROJECT_READ')")
+    public ResponseEntity<List<ProjectResponse>> getProjectsByTeamLead(@PathVariable String teamLead) {
+        return ResponseEntity.ok(projectService.getProjectsByTeamLead(teamLead));
+    }
+
     @GetMapping("/status/{status}")
     @PreAuthorize("hasAuthority('PROJECT_READ')")
     public ResponseEntity<List<ProjectResponse>> getProjectsByStatus(@PathVariable ProjectStatus status) {
@@ -65,7 +71,7 @@ public class ProjectController {
     @PreAuthorize("hasAuthority('PROJECT_UPDATE')")
     public ResponseEntity<ProjectResponse> updateProject(
             @PathVariable String id,
-            @RequestBody UpdateProjectRequest request) {
+            @Valid @RequestBody UpdateProjectRequest request) {
         return ResponseEntity.ok(projectService.updateProject(id, request));
     }
 

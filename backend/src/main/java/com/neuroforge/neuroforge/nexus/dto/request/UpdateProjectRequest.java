@@ -23,6 +23,8 @@ public class UpdateProjectRequest {
 
     ProjectPriority priority;
 
+    String teamLead;
+
     String ownerId;
 
     List<String> memberIds;
