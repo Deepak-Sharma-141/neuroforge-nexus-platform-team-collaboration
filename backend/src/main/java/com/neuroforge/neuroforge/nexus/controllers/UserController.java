@@ -2,7 +2,10 @@ package com.neuroforge.neuroforge.nexus.controllers;
 
 import com.neuroforge.neuroforge.nexus.dto.request.SignupRequest;
 import com.neuroforge.neuroforge.nexus.dto.response.SignupResponse;
+import com.neuroforge.neuroforge.nexus.dto.response.UserSummaryResponse;
+import com.neuroforge.neuroforge.nexus.entities.User;
 import com.neuroforge.neuroforge.nexus.entities.enums.Role;
+import com.neuroforge.neuroforge.nexus.security.CustomUserDetailService;
 import com.neuroforge.neuroforge.nexus.service.AuthService;
 import com.neuroforge.neuroforge.nexus.service.UserService;
 import lombok.AccessLevel;
@@ -11,6 +14,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -65,4 +70,20 @@ public class UserController {
             @RequestParam Role role) {
         return ResponseEntity.ok(userService.updateRole(id, role));
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<SignupResponse> getCurrentUser(@AuthenticationPrincipal User principal) {
+        return ResponseEntity.ok(userService.getCurrentUser(principal));
+    }
+
+    // Lightweight team directory (id/name/email/role only). No @PreAuthorize — any
+    // authenticated user may browse it, e.g. to pick a team lead or a member to add
+    // to a project. The result itself is scoped in the service: ADMIN/PROJECT_MANAGER
+    // get everyone, everyone else only gets people who share a project with them.
+    @GetMapping("/directory")
+    public ResponseEntity<List<UserSummaryResponse>> getUserDirectory(@AuthenticationPrincipal User principal) {
+        return ResponseEntity.ok(userService.getUserDirectory(principal));
+    }
+
+
 }

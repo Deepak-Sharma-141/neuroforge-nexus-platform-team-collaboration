@@ -1,16 +1,22 @@
 package com.neuroforge.neuroforge.nexus.service.impl;
 
 import com.neuroforge.neuroforge.nexus.dto.response.SignupResponse;
+import com.neuroforge.neuroforge.nexus.dto.response.UserSummaryResponse;
+import com.neuroforge.neuroforge.nexus.entities.Project;
 import com.neuroforge.neuroforge.nexus.entities.User;
 import com.neuroforge.neuroforge.nexus.entities.enums.Role;
 import com.neuroforge.neuroforge.nexus.mapper.UserMapper;
+import com.neuroforge.neuroforge.nexus.repository.ProjectRepository;
 import com.neuroforge.neuroforge.nexus.repository.UserRepository;
 import com.neuroforge.neuroforge.nexus.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +24,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final ProjectRepository projectRepository;
     private final UserMapper userMapper;
 
     @Override
@@ -51,5 +58,41 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         user.setRole(newRole);
         return userMapper.toResponse(userRepository.save(user));
+    }
+
+    @Override
+    public SignupResponse getCurrentUser(User principal) {
+        // principal is already the authenticated User document (no extra DB round-trip needed)
+        return userMapper.toResponse(principal);
+    }
+
+    @Override
+    public List<UserSummaryResponse> getUserDirectory(User principal) {
+        if (principal.getRole() == Role.ADMIN || principal.getRole() == Role.PROJECT_MANAGER) {
+            return userMapper.toSummaryList(userRepository.findAll());
+        }
+
+        // Not a manager: only show people who actually share a project with them
+        // (owner, team lead, or a member on any project this user is involved in),
+        // plus themselves.
+        List<Project> myProjects = projectRepository.findAllInvolvingUser(principal.getId());
+
+        Set<String> colleagueIds = new HashSet<>();
+        colleagueIds.add(principal.getId());
+        for (Project project : myProjects) {
+            if (project.getOwnerId() != null) {
+                colleagueIds.add(project.getOwnerId());
+            }
+            if (project.getTeamLead() != null) {
+                colleagueIds.add(project.getTeamLead());
+            }
+            if (project.getMemberIds() != null) {
+                colleagueIds.addAll(project.getMemberIds());
+            }
+        }
+
+        List<User> colleagues = new ArrayList<>();
+        userRepository.findAllById(colleagueIds).forEach(colleagues::add);
+        return userMapper.toSummaryList(colleagues);
     }
 }

@@ -4,8 +4,10 @@ import com.neuroforge.neuroforge.nexus.dto.request.CreateProjectRequest;
 import com.neuroforge.neuroforge.nexus.dto.request.UpdateProjectRequest;
 import com.neuroforge.neuroforge.nexus.dto.response.ProjectResponse;
 import com.neuroforge.neuroforge.nexus.entities.Project;
+import com.neuroforge.neuroforge.nexus.entities.User;
 import com.neuroforge.neuroforge.nexus.entities.enums.ProjectPriority;
 import com.neuroforge.neuroforge.nexus.entities.enums.ProjectStatus;
+import com.neuroforge.neuroforge.nexus.entities.enums.Role;
 import com.neuroforge.neuroforge.nexus.exception.ProjectAlreadyExistsException;
 import com.neuroforge.neuroforge.nexus.exception.ProjectNotFoundException;
 import com.neuroforge.neuroforge.nexus.exception.ResourceNotFoundException;
@@ -31,6 +33,21 @@ public class ProjectServiceImpl implements ProjectService {
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
 
+    // Looks up a user by id and rejects ADMIN accounts — admins administer the
+    // platform, they aren't project team members, so they can't be a team lead
+    // or a project member. Used for teamLead / memberIds only, not ownerId
+    // (the owner is whoever created the project, which is already restricted
+    // to PROJECT_MANAGER/ADMIN by the PROJECT_CREATE permission).
+    private User getAssignableUser(String userId, String label) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(label + " not found with id: " + userId));
+        if (user.getRole() == Role.ADMIN) {
+            throw new IllegalArgumentException(
+                    label + " cannot be an ADMIN account — admins aren't assignable as project team members");
+        }
+        return user;
+    }
+
     @Override
     public ProjectResponse createProject(CreateProjectRequest request) {
         log.info("Creating new project with name: {}", request.getName());
@@ -43,15 +60,13 @@ public class ProjectServiceImpl implements ProjectService {
             throw new ResourceNotFoundException("Owner user not found with id: " + request.getOwnerId());
         }
 
-        if (request.getTeamLead() != null && !userRepository.existsById(request.getTeamLead())) {
-            throw new ResourceNotFoundException("Team lead user not found with id: " + request.getTeamLead());
+        if (request.getTeamLead() != null) {
+            getAssignableUser(request.getTeamLead(), "Team lead");
         }
 
         if (request.getMemberIds() != null) {
             for (String memberId : request.getMemberIds()) {
-                if (!userRepository.existsById(memberId)) {
-                    throw new ResourceNotFoundException("Member user not found with id: " + memberId);
-                }
+                getAssignableUser(memberId, "Member");
             }
         }
 
@@ -88,6 +103,20 @@ public class ProjectServiceImpl implements ProjectService {
     public List<ProjectResponse> getAllProjects() {
         log.info("Fetching all projects");
         List<Project> projects = projectRepository.findAll();
+        return projectMapper.toResponseList(projects);
+    }
+
+    @Override
+    public List<ProjectResponse> getVisibleProjects(User principal) {
+        // PROJECT_MANAGER and ADMIN run/oversee the whole portfolio, so they see
+        // every project. Everyone else (DEVELOPER, TESTER, DEVOPS_ENGINEER, ...)
+        // only sees projects they're actually enrolled in.
+        if (principal.getRole() == Role.ADMIN || principal.getRole() == Role.PROJECT_MANAGER) {
+            return getAllProjects();
+        }
+
+        log.info("Fetching projects involving user ID: {}", principal.getId());
+        List<Project> projects = projectRepository.findAllInvolvingUser(principal.getId());
         return projectMapper.toResponseList(projects);
     }
 
@@ -134,15 +163,13 @@ public class ProjectServiceImpl implements ProjectService {
             throw new ResourceNotFoundException("Owner user not found with id: " + request.getOwnerId());
         }
 
-        if (request.getTeamLead() != null && !userRepository.existsById(request.getTeamLead())) {
-            throw new ResourceNotFoundException("Team lead user not found with id: " + request.getTeamLead());
+        if (request.getTeamLead() != null) {
+            getAssignableUser(request.getTeamLead(), "Team lead");
         }
 
         if (request.getMemberIds() != null) {
             for (String memberId : request.getMemberIds()) {
-                if (!userRepository.existsById(memberId)) {
-                    throw new ResourceNotFoundException("Member user not found with id: " + memberId);
-                }
+                getAssignableUser(memberId, "Member");
             }
         }
 
@@ -171,9 +198,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + projectId));
 
-        if (!userRepository.existsById(memberId)) {
-            throw new ResourceNotFoundException("User not found with id: " + memberId);
-        }
+        getAssignableUser(memberId, "Member");
 
         if (project.getMemberIds() == null) {
             project.setMemberIds(new ArrayList<>());
