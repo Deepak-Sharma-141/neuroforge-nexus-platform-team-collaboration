@@ -7,8 +7,15 @@ spring:
       uuid-representation: standard
       uri: mongodb://localhost:27017
       database: ${MONGO_DATABASE}
-      username: ${MONGO_USERNAME}     #keep it in you env variable
+      username: ${MONGO_USERNAME}
       password: ${MONGO_PASSWORD}
 
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: llama3.1:8b
+        temperature: 0.0
+
 jwt:
-  secret-key: sjihrjhsguusgkgju549ahfj;jawjiquaHJJJGUjJiohugvLJNDV;KJPUgSJGIHSUH
+  secret-key: hsvbwele9wbsvl9wsdvnv8wjdnvka;ba,v9uuvhvfbdbvukfbvg

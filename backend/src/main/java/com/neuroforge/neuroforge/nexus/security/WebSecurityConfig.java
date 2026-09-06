@@ -22,7 +22,7 @@ public class WebSecurityConfig {
 
     private final JwtAuthenticationFilter authenticationFilter;
 
-    private static final String[] JWT_ROUTES = {"/auth/**", "/users/**", "/projects/**", "/tasks/**", "/actuator/**"};
+    private static final String[] JWT_ROUTES = {"/auth/**", "/users/**", "/chat/**", "/projects/**", "/tasks/**", "/actuator/**"};
 
     @Bean
     public SecurityFilterChain jwtChain(HttpSecurity httpSecurity) {
