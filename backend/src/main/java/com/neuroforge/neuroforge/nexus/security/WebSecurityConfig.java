@@ -1,5 +1,6 @@
 package com.neuroforge.neuroforge.nexus.security;
 
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,19 +23,21 @@ public class WebSecurityConfig {
 
     private final JwtAuthenticationFilter authenticationFilter;
 
-    private static final String[] JWT_ROUTES = {"/auth/**", "/users/**", "/chat/**", "/projects/**", "/tasks/**", "/actuator/**"};
-
     @Bean
-    public SecurityFilterChain jwtChain(HttpSecurity httpSecurity) {
+    public SecurityFilterChain jwtChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
-                .securityMatcher(JWT_ROUTES)
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(
                         SessionCreationPolicy.STATELESS
                 ))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/signup", "/auth/login").permitAll()
+                        // 1. Allow Tomcat internal async dispatches (SSE / WebFlux streaming)
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.FORWARD).permitAll()
+                        // 2. Public endpoints
+                        .requestMatchers("/auth/**").permitAll()
+                        // 3. Protected endpoints
+                        .requestMatchers("/chat", "/chat/**", "/users/**", "/projects/**", "/tasks/**", "/actuator/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -52,7 +55,5 @@ public class WebSecurityConfig {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailService);
         provider.setPasswordEncoder(passwordEncoder);
         return new ProviderManager(provider);
-
     }
 }
-

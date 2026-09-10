@@ -1,6 +1,8 @@
 package com.neuroforge.neuroforge.nexus.service;
 
+import reactor.core.publisher.Flux;
+
 public interface ChatService {
 
-    String ask(String message);
+    Flux<String> ask(String message);
 }
