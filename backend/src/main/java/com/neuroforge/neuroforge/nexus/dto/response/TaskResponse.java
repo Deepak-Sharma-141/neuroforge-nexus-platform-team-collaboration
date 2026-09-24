@@ -4,6 +4,7 @@ import com.neuroforge.neuroforge.nexus.entities.enums.TaskStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +29,8 @@ public class TaskResponse {
     TaskStatus status;
 
     String assigneeId;
+
+    LocalDate dueDate;
 
     String createdBy;
 

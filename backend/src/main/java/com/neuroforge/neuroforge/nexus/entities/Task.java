@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,9 @@ public class Task {
     TaskStatus status = TaskStatus.TODO;
 
     String assigneeId;
+
+    // Optional due date, surfaced in the calendar view on the frontend.
+    LocalDate dueDate;
 
     String createdBy;
 

@@ -221,7 +221,8 @@ public class TaskActionAiTools {
                         title,
                         description,
                         assigneeId,
-                        TaskStatus.TODO
+                        TaskStatus.TODO,
+                        null
                 );
 
         /*
